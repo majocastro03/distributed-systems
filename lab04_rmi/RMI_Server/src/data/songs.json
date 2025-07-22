@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Bohemian Rhapsody",
+    "genre": "Rock",
+    "author": "Queen",
+    "language": "English",
+    "releaseYear": 1975
+  },
+  {
+    "title": "La Bicicleta",
+    "genre": "Pop",
+    "author": "Shakira",
+    "language": "Spanish",
+    "releaseYear": 2016
+  }
+]
