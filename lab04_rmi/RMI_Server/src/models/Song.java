@@ -23,15 +23,12 @@ public class Song implements Serializable {
     }
 
     public String getTitle() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getTitle'");
+        return title;
     }
     public String getGenre() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getGenre'");
+        return genre;
     }
     public String getAuthor() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAuthor'");
+        return author;
     }
 }
