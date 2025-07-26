@@ -21,4 +21,14 @@ public class Song implements Serializable {
     public String toString() {
         return title + " - " + author + " (" + genre + ", " + language + ", " + releaseYear + ")";
     }
+
+    public String getTitle() {
+        return title;
+    }
+    public String getGenre() {
+        return genre;
+    }
+    public String getAuthor() {
+        return author;
+    }
 }

@@ -1,5 +1,6 @@
-import shared.SongServiceRMI;
+
 import models.Song;
+import shared.SongServiceRMI;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -14,7 +15,7 @@ public class ClientMain {
 
             Scanner scanner = new Scanner(System.in);
             while (true) {
-                System.out.print("\nBuscar por (title, genre, author) o 'salir': ");
+                System.out.print("\nBuscar por (titulo, genero, autor) o 'salir': ");
                 String type = scanner.nextLine();
                 if (type.equalsIgnoreCase("salir")) break;
 
@@ -22,9 +23,9 @@ public class ClientMain {
                 String term = scanner.nextLine();
 
                 List<Song> results = switch (type.toLowerCase()) {
-                    case "title" -> service.searchByTitle(term);
-                    case "genre" -> service.searchByGenre(term);
-                    case "author" -> service.searchByAuthor(term);
+                    case "titulo" -> service.searchByTitle(term);
+                    case "genero" -> service.searchByGenre(term);
+                    case "autor" -> service.searchByAuthor(term);
                     default -> {
                         System.out.println("Tipo de búsqueda no válido.");
                         yield null;
