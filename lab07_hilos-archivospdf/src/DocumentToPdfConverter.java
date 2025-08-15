@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -8,10 +9,13 @@ public class DocumentToPdfConverter {
     private static final String LIBREOFFICE_PATH = "C:\\Program Files\\LibreOffice\\program\\soffice.exe"; 
     private static final String OUTPUT_DIR = "C:\\Users\\maria\\OneDrive - UPB\\UPB\\8 SEMESTRE\\Sistemas Distribuidos\\laboratorios\\lab07_hilos-archivospdf\\out";
     private static final String RUTAS_TXT = "C:\\Users\\maria\\OneDrive - UPB\\UPB\\8 SEMESTRE\\Sistemas Distribuidos\\laboratorios\\lab07_hilos-archivospdf\\src\\data\\rutas.txt";
+    
+    // Semáforo para limitar las conversiones concurrentes de LibreOffice
+    private static final Semaphore libreOfficeSemaphore = new Semaphore(1);
 
     public static void main(String[] args) {
         // Número de hilos a probar
-        int numHilos = 2; 
+        int numHilos = 16; 
 
         File outDir = new File(OUTPUT_DIR);
         if (!outDir.exists()) {
@@ -24,18 +28,26 @@ public class DocumentToPdfConverter {
             return;
         }
 
+        // Lista sincronizada para los PDFs generados
+        List<String> pdfsGenerados = Collections.synchronizedList(new ArrayList<>());
+
         long startTime = System.currentTimeMillis();
 
         ExecutorService executor = Executors.newFixedThreadPool(numHilos);
-        List<Future<String>> futures = new ArrayList<>();
 
         for (String filePath : filePaths) {
-            File inputFile = new File(filePath);
-            if (!inputFile.exists()) {
-                System.err.println("Archivo no encontrado: " + filePath);
-                continue;
-            }
-            futures.add(executor.submit(() -> convertToPdf(inputFile, outDir)));
+            executor.submit(() -> {
+                File inputFile = new File(filePath);
+                if (!inputFile.exists()) {
+                    System.err.println("Archivo no encontrado: " + filePath);
+                    return;
+                }
+                
+                String pdfPath = convertToPdf(inputFile, outDir);
+                if (pdfPath != null) {
+                    pdfsGenerados.add(pdfPath);
+                }
+            });
         }
 
         executor.shutdown();
@@ -49,15 +61,8 @@ public class DocumentToPdfConverter {
         System.out.println("\nConversión finalizada con " + numHilos + " hilos en " + (endTime - startTime) + " ms");
 
         System.out.println("\nPDFs generados:");
-        for (Future<String> future : futures) {
-            try {
-                String pdfPath = future.get();
-                if (pdfPath != null) {
-                    System.out.println(pdfPath);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        for (String pdfPath : pdfsGenerados) {
+            System.out.println(pdfPath);
         }
     }
 
@@ -82,64 +87,43 @@ public class DocumentToPdfConverter {
 
     private static String convertToPdf(File inputFile, File outputDir) {
         try {
-            String ext = getExtension(inputFile.getName()).toLowerCase();
-            String filter;
+            // Usar semáforo para evitar conflictos de LibreOffice
+            libreOfficeSemaphore.acquire();
+            
+            try {
+                ProcessBuilder pb = new ProcessBuilder(
+                        LIBREOFFICE_PATH,
+                        "--headless",
+                        "--convert-to", "pdf", 
+                        "--outdir", outputDir.getAbsolutePath(),
+                        inputFile.getAbsolutePath()
+                );
 
-            switch (ext) {
-                case "doc":
-                case "docx":
-                    filter = "writer_pdf_Export";
-                    break;
-                case "ppt":
-                case "pptx":
-                    filter = "impress_pdf_Export";
-                    break;
-                case "xls":
-                case "xlsx":
-                    filter = "calc_pdf_Export";
-                    break;
-                case "png":
-                case "jpg":
-                case "jpeg":
-                    filter = "draw_pdf_Export";
-                    break;
-                default:
-                    filter = "writer_pdf_Export";
-            }
+                pb.redirectErrorStream(true);
+                Process process = pb.start();
 
-            ProcessBuilder pb = new ProcessBuilder(
-                    LIBREOFFICE_PATH,
-                    "--headless",
-                    "--convert-to", "pdf:" + filter,
-                    "--outdir", outputDir.getAbsolutePath(),
-                    inputFile.getAbsolutePath()
-            );
-
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println("[LibreOffice] " + line);
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println("[LibreOffice] " + line);
+                    }
                 }
-            }
 
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                String pdfName = inputFile.getName().replaceFirst("\\.[^.]+$", "") + ".pdf";
-                return new File(outputDir, pdfName).getAbsolutePath();
-            } else {
-                System.err.println("Error al convertir: " + inputFile.getAbsolutePath());
+                int exitCode = process.waitFor();
+                if (exitCode == 0) {
+                    String pdfName = inputFile.getName().replaceFirst("\\.[^.]+$", "") + ".pdf";
+                    File pdfFile = new File(outputDir, pdfName);
+                    return pdfFile.getAbsolutePath();
+                } else {
+                    System.err.println("Error al convertir: " + inputFile.getAbsolutePath() + " (código de salida: " + exitCode + ")");
+                }
+            } finally {
+                libreOfficeSemaphore.release();
             }
         } catch (IOException | InterruptedException e) {
+            System.err.println("Excepción al convertir " + inputFile.getAbsolutePath() + ": " + e.getMessage());
             e.printStackTrace();
         }
         return null;
-    }
-
-    private static String getExtension(String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
     }
 }
