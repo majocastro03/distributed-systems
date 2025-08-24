@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -10,14 +11,13 @@ import java.util.concurrent.TimeUnit;
 
 public class WebToPdfConverter {
 
-    // Ruta al ejecutable de Chrome/Chromium
     private static final String CHROME_PATH = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
     private static final String OUTPUT_DIR = "C:\\Users\\maria\\OneDrive - UPB\\UPB\\8 SEMESTRE\\Sistemas Distribuidos\\laboratorios\\lab06_hilos-urlspdf\\out";
     private static final String INPUT_FILE = "C:\\Users\\maria\\OneDrive - UPB\\UPB\\8 SEMESTRE\\Sistemas Distribuidos\\laboratorios\\lab06_hilos-urlspdf\\src\\data\\urls.txt";
 
     public static void main(String[] args) {
         // Cantidad de hilos
-        int numHilos = 11; 
+        int numHilos = 14; 
 
         List<String> urls = readUrlsFromFile(INPUT_FILE);
         if (urls.isEmpty()) {
@@ -65,13 +65,19 @@ public class WebToPdfConverter {
             );
             pb.redirectErrorStream(true);
             Process process = pb.start();
-            process.waitFor();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                }
+            }
+            
+            int exitCode = process.waitFor();
 
             File pdfFile = new File(outputPath);
-            if (pdfFile.exists()) {
+            if (pdfFile.exists() && exitCode == 0) {
                 System.out.println("PDF generado: " + pdfFile.getAbsolutePath());
             } else {
-                System.err.println("No se pudo generar el PDF para: " + url);
+                System.err.println("No se pudo generar el PDF para: " + url + " (Exit code: " + exitCode + ")");
             }
         } catch (IOException | InterruptedException e) {
             System.err.println("Error procesando " + url + ": " + e.getMessage());

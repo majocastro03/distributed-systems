@@ -1,0 +1,37 @@
+# Laboratorio SOAP - Sistemas Distribuidos
+
+Este proyecto consiste en la implementación de una arquitectura cliente-servidor utilizando el protocolo SOAP en Java. El laboratorio está dividido en dos proyectos Maven independientes: uno para el servidor y otro para el cliente.
+
+## Estructura del Proyecto
+
+- **Servidor:** Expone servicios web SOAP.
+- **Cliente:** Consume los servicios SOAP proporcionados por el servidor.
+
+## Ejecución
+
+### Servidor
+
+Para iniciar el servidor, navega al directorio del proyecto del servidor y ejecuta:
+```bash
+mvn clean install
+mvn mvn exec:java
+```
+
+### Cliente
+
+Para ejecutar el cliente, navega al directorio del proyecto del cliente y ejecuta:
+```bash
+mvn clean install
+mvn exec:java -Dexec.mainClass="com.client.Client"
+```
+
+## Requisitos
+
+- Java 18 o superior
+- Maven
+
+## Notas
+
+- Asegúrate de que el servidor esté en ejecución antes de iniciar el cliente.
+- Los servicios SOAP están definidos en el archivo WSDL incluido en el proyecto del servidor.
+

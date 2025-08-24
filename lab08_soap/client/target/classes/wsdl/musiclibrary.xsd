@@ -1,0 +1,25 @@
+<xs:schema xmlns:tns="http://interfaces.server.com/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://interfaces.server.com/">
+<xs:element name="searchSongs" type="tns:searchSongs"/>
+<xs:element name="searchSongsResponse" type="tns:searchSongsResponse"/>
+<xs:complexType name="searchSongs">
+<xs:sequence>
+<xs:element name="arg0" type="xs:string" minOccurs="0"/>
+<xs:element name="arg1" type="xs:string" minOccurs="0"/>
+<xs:element name="arg2" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+<xs:complexType name="searchSongsResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:song" minOccurs="0" maxOccurs="unbounded"/>
+</xs:sequence>
+</xs:complexType>
+<xs:complexType name="song">
+	<xs:sequence>
+		<xs:element name="title" type="xs:string" minOccurs="0"/>
+		<xs:element name="genre" type="xs:string" minOccurs="0"/>
+		<xs:element name="author" type="xs:string" minOccurs="0"/>
+		<xs:element name="language" type="xs:string" minOccurs="0"/>
+		<xs:element name="year" type="xs:int" minOccurs="0"/>
+	</xs:sequence>
+</xs:complexType>
+</xs:schema>
